@@ -19,8 +19,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
     private TextView textViewResult;
-    private NetworkService networkService = NetworkService.getInstance();
-    private List<Post> posts;
+    private List<Post> posts = new ArrayList<>();
 
 
     @Override
@@ -28,25 +27,45 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         textViewResult = findViewById(R.id.texViewResult);
-        posts = new ArrayList<>();
-
-        networkService.getJSONApi().getPosts().enqueue(new Callback<List<Post>>() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://jsonplaceholder.typicode.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        JsonPlaceHolderApi jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
+        Call <List<Post>> call = jsonPlaceHolderApi.getPosts();
+        call.enqueue(new Callback<List<Post>>() {
             @Override
             public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
-                List<Post> posts = response.body();
+                if(!response.isSuccessful()){
+                    textViewResult.setText(String.format("Caode is: %s", response.code()));
+                }
+                List<Post> postsFromUrl = response.body();
+                posts.addAll(postsFromUrl);
                 /*for (Post post : posts) {
                     String content = String.format("ID: %s \n user ID: %s \n Title: %s \n Text: %s \n\n", post.getId(),
                             post.getUserId(), post.getTitle(), post.getText());
                     textViewResult.append(content);
                 }*/
-                posts.addAll(posts);
+
             }
 
             @Override
             public void onFailure(Call<List<Post>> call, Throwable t) {
+                textViewResult.setText(t.getMessage());
 
             }
         });
+                for (Post post : posts) {
+                    String content = String.format("ID: %s \n user ID: %s \n Title: %s \n Text: %s \n\n", post.getId(),
+                            post.getUserId(), post.getTitle(), post.getText());
+                    textViewResult.append(content);
+                }
+
+
+
+
 
     }
+
+
 }

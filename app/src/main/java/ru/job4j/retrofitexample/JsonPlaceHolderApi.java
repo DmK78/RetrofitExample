@@ -10,8 +10,13 @@ import retrofit2.http.Url;
 public interface JsonPlaceHolderApi {
     @GET("posts")
     Call<List<Post>> getPosts();
+    @GET("posts")
+    Call<List<Comment>> getComments();
     @GET
     Call<List<Comment>> getComments(@Url String url);
     @GET("posts/{id}")
     Call<Post> getPost (@Path("id") int posId);
+    @GET("comments/{id}")
+    Call<Comment> getComment (@Path("id") int posId);
 }
+
