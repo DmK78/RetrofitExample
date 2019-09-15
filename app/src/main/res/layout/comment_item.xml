@@ -21,7 +21,7 @@
             android:id="@+id/textView2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="id"
+            android:text="post id"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginLeft="24dp"
-            android:text="user id"
+            android:text="comment id"
             app:layout_constraintStart_toEndOf="@+id/textViewPostId"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -64,7 +64,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="title"
+            android:text="email"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewPostId" />
 
@@ -92,7 +92,7 @@
             app:layout_constraintTop_toBottomOf="@+id/textViewCommentsEmail" />
 
         <TextView
-            android:id="@+id/textViewText"
+            android:id="@+id/textViewCommentText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
