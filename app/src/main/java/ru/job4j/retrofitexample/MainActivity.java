@@ -6,10 +6,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -17,13 +18,14 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity {
-    private TextView textViewResult;
+public class MainActivity extends AppCompatActivity  {
     private List<Post> posts = new ArrayList<>();
     private List<Comment> comments = new ArrayList<>();
     private RecyclerView recycler;
     private PostsAdapter postAdapter;
-    private CommentsAdapter comentsAdapter;
+    private CommentsAdapter commentsAdapter;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +35,41 @@ public class MainActivity extends AppCompatActivity {
         recycler.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         getPostsFromURL();
         //getCommentsFromURL();
+        //createPost(new Post(1,"title1", "text1"));
     }
+
+    private void createPost(final Post post){
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://jsonplaceholder.typicode.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        JsonPlaceHolderApi jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
+        Map<String, String> fields = new HashMap<>();
+
+
+        Call<Post> call = jsonPlaceHolderApi.putPost(1,post);
+        call.enqueue(new Callback<Post>() {
+            @Override
+            public void onResponse(Call<Post> call, Response<Post> response) {
+                if(response.isSuccessful()){
+                    List<Post> postList = new ArrayList<>();
+                    postList.add(response.body());
+                    writePostsToRecycler(postList);
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<Post> call, Throwable t) {
+
+            }
+        });
+
+    }
+
+
+
+
 
     private void getPostsFromURL() {
         Retrofit retrofit = new Retrofit.Builder()
@@ -63,13 +99,13 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void getCommentsFromURL() {
+    public void getCommentsFromURL(int id) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://jsonplaceholder.typicode.com/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         JsonPlaceHolderApi jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
-        Call<List<Comment>> call = jsonPlaceHolderApi.getComments();
+        Call<List<Comment>> call = jsonPlaceHolderApi.getCommentsById(id);
         call.enqueue(new Callback<List<Comment>>() {
             @Override
             public void onResponse(Call<List<Comment>> call, Response<List<Comment>> response) {
@@ -77,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.i("11111", String.format("Code is: %s", response.code()));
                 }
                 List<Comment> commentsFromUrl = response.body();
-                Log.i("11111", String.format("сщььутеы size is: %s", commentsFromUrl.size()));
+                Log.i("11111", String.format("comments size is: %s", commentsFromUrl.size()));
                 writeCommentsToRecycler(commentsFromUrl);
             }
 
@@ -93,13 +129,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void writeCommentsToRecycler(List<Comment> commentsFromUrl) {
         comments.addAll(commentsFromUrl);
-        comentsAdapter = new CommentsAdapter(getApplicationContext(), comments);
-        this.recycler.setAdapter(comentsAdapter);
+        commentsAdapter = new CommentsAdapter(getApplicationContext(), comments);
+        this.recycler.setAdapter(commentsAdapter);
     }
 
     private void writePostsToRecycler(List<Post> postsFromUrl) {
         posts.addAll(postsFromUrl);
-        postAdapter = new PostsAdapter(getApplicationContext(), posts);
+        postAdapter = new PostsAdapter(getApplicationContext(), posts, MainActivity.this);
         this.recycler.setAdapter(postAdapter);
     }
+
+
 }
