@@ -1,6 +1,7 @@
 package ru.job4j.retrofitexample;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,9 +16,14 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -30,6 +36,7 @@ public class PostsFragment extends Fragment {
     private PostsAdapter postAdapter;
     private List<Post> posts = new ArrayList<>();
     private OnPostClickListener callback;
+    public static String ERROR_CODE = "errorCode";
 
     @Nullable
     @Override
@@ -37,29 +44,88 @@ public class PostsFragment extends Fragment {
         View view = inflater.inflate(R.layout.activity_posts, container, false);
         recycler = view.findViewById(R.id.recyclerPosts);
         recycler.setLayoutManager(new LinearLayoutManager(getContext()));
+        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        OkHttpClient.Builder client = new OkHttpClient.Builder();
+        if(BuildConfig.DEBUG){
+            interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        } else {
+            interceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
+        }
+        client.addInterceptor(interceptor);
+        OkHttpClient clientErrorIntercept = new OkHttpClient.Builder()
+                .addInterceptor(new Interceptor() {
+                    @Override
+                    public okhttp3.Response intercept(Chain chain) throws IOException {
+                        Request request = chain.request();
+                        okhttp3.Response response = chain.proceed(request);
+                        if (response.code() >= 400 && response.code() <= 599) {
+                            Intent intent = new Intent(getContext(), ErrorActivity.class);
+                            intent.putExtra(ERROR_CODE,response.code());
+                            startActivity(intent);
+                            return response;
+                        }
+                        return response;
+                    }
+                })
+                .build();
+
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://jsonplaceholder.typicode.com/")
                 .addConverterFactory(GsonConverterFactory.create())
+                .client(client.build())
+                .client(clientErrorIntercept)
+                .build();
+
+        JsonPlaceHolderApi jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
+        Call<Post> call = jsonPlaceHolderApi.getPost(0);
+        call.enqueue(new Callback<Post>() {
+            @Override
+            public void onResponse(Call<Post> call, Response<Post> response) {
+                if (response.isSuccessful()) {
+                    Post postFromUrl = response.body();
+                    List<Post> p = new ArrayList<>();
+                    p.add(postFromUrl);
+                    writePostsToRecycler(p);
+                } else {
+
+                    Toast.makeText(getContext(), String.format("Error code is: %s", response.code()), Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<Post> call, Throwable t) {
+                Toast.makeText(getContext(), String.format("Error code is: %s", t.getMessage()), Toast.LENGTH_SHORT).show();
+
+            }
+        });
+        /*Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://jsonplaceholder.typicode.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(client.build())
                 .build();
         JsonPlaceHolderApi jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
         Call<List<Post>> call = jsonPlaceHolderApi.getPosts();
         call.enqueue(new Callback<List<Post>>() {
             @Override
             public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
-                if (!response.isSuccessful()) {
-                    Log.i("11111", String.format("Code is: %s", response.code()));
+                if (response.isSuccessful()) {
+                    List<Post> postsFromUrl = response.body();
+                    writePostsToRecycler(postsFromUrl);
+                } else {
+                    Toast.makeText(getContext(), String.format("Error code is: $s",response.code()), Toast.LENGTH_SHORT).show();
                 }
-                List<Post> postsFromUrl = response.body();
-                Log.i("11111", String.format("posts size is: %s", postsFromUrl.size()));
-                writePostsToRecycler(postsFromUrl);
+
             }
 
             @Override
             public void onFailure(Call<List<Post>> call, Throwable t) {
-                Log.i("11111", t.getMessage());
+                Toast.makeText(getContext(), String.format("Error code is: %s",t.getMessage()), Toast.LENGTH_SHORT).show();
 
             }
-        });
+        });*/
 
 
         return view;
