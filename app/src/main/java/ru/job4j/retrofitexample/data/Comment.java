@@ -1,4 +1,4 @@
-package ru.job4j.retrofitexample;
+package ru.job4j.retrofitexample.data;
 
 import com.google.gson.annotations.SerializedName;
 

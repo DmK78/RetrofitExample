@@ -1,6 +1,5 @@
 package ru.job4j.retrofitexample;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +14,8 @@ import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.Url;
+import ru.job4j.retrofitexample.data.Comment;
+import ru.job4j.retrofitexample.data.Post;
 
 public interface JsonPlaceHolderApi {
     @GET("posts")
